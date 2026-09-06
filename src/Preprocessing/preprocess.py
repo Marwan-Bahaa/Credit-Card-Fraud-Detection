@@ -16,10 +16,6 @@ class Preprocessing:
 
     # ==================== HELPER FUNCTIONS ====================
 
-    def _read_data(self, file_path):
-        """Reads CSV dataset from path."""
-        return pd.read_csv(file_path)
-
     def _apply_log(self, df, cols=['Time', 'Amount']):
         """Applies log1p transformation to specified features."""
         df_out = df.copy()
@@ -72,6 +68,7 @@ class Preprocessing:
 
         return df_clipped
 
+
     # ==================== MAIN PIPELINE FUNCTIONS ====================
 
     def fit_transform(self, train_df):
@@ -79,6 +76,9 @@ class Preprocessing:
         Executes pipeline on TRAIN data:
         Calculate Bounds -> Clip Outliers -> Log Transform -> Standard Scaling (fits scaler)
         """
+        #remove dublicated  
+        train_df.drop_duplicates().reset_index(drop=True)
+
         # 1. Learn IQR bounds on TRAIN features
         self._calc_boundaries(train_df)
 
@@ -93,11 +93,7 @@ class Preprocessing:
         self.feature_names = X_train.columns.tolist()
 
         # 5. Fit & apply StandardScaler
-        X_train_scaled = pd.DataFrame(
-            self.scaler.fit_transform(X_train),
-            columns=self.feature_names,
-            index=X_train.index
-        )
+        X_train_scaled = self.scaler.fit_transform(X_train) 
 
         return X_train_scaled, y_train, self.clip_bounds, self.scaler
 
@@ -106,6 +102,9 @@ class Preprocessing:
         Executes pipeline on VAL, TEST, or INFERENCE data:
         Clip Outliers (uses stored/passed bounds) -> Log Transform -> Standard Scaling (uses train scaler)
         """
+        #remove dublicated  
+        df.drop_duplicates().reset_index(drop=True)
+
         # 1. Clip outliers using stored bounds or passed custom bounds
         df_clipped = self._clip_outliers(df, bounds=custom_bounds)
 
@@ -116,11 +115,8 @@ class Preprocessing:
         X_eval, y_eval = self._separate_X_y(df_log)
 
         # 4. Apply StandardScaler using fitted scaler parameters
-        X_eval_scaled = pd.DataFrame(
-            scaler.transform(X_eval[self.feature_names]),
-            columns=self.feature_names,
-            index=X_eval.index
-        )
+        X_eval_scaled = scaler.transform(X_eval)
+        
 
         return X_eval_scaled, y_eval
 
@@ -138,24 +134,24 @@ if __name__ == '__main__':
     if parent_dir not in sys.path:
         sys.path.append(parent_dir) 
 
-    from Enum import PathEnum 
-
+    from Enum.PathEnum import PathEnum
+    from data.data_helper import load_data
     preprocessor = Preprocessing(target_col='Class', factor=1.5)
      
     # 1. Read Data
-    train_df = preprocessor._read_data(PathEnum.PathEnum.TRAIN_PATH.value)
-    val_df = preprocessor._read_data(PathEnum.PathEnum.VAL_PATH.value)
-    test_df = preprocessor._read_data(PathEnum.PathEnum.TEST_PATH.value)
+    train_df = load_data(PathEnum.TRAIN_PATH.value)
+    val_df = load_data(PathEnum.VAL_PATH.value)
+    test_df = load_data(PathEnum.TEST_PATH.value)
 
     # 3. Process Train set (Fit + Transform)
     X_train, y_train, clip_bounds, scaler = preprocessor.fit_transform(train_df)
 
     # 4. Process Validation and Test sets (Transform ONLY)
-    X_val, y_val = preprocessor.transform(val_df,clip_bounds,scaler)
-    X_test, y_test = preprocessor.transform(test_df,clip_bounds,scaler)
+    X_val, y_val = preprocessor.transform(val_df, clip_bounds, scaler)
+    X_test, y_test = preprocessor.transform(test_df, clip_bounds, scaler)
 
     # Check processed outputs
     print(f"X_train shape: {X_train.shape}")
     print(f"X_val shape:   {X_val.shape}")
     print(f"X_test shape:  {X_test.shape}")
-    print(f"Columns after preprocessing: {X_train.columns.tolist()[:5]}...")
+    print(f"Columns after preprocessing: {X_train[:5]}...")

@@ -88,70 +88,124 @@ class RandomForest_model(BaseEstimator, ClassifierMixin):
 
 
 if __name__ == '__main__':
-    import sys
     import os
-    from sklearn.metrics import classification_report, precision_recall_curve, average_precision_score
+    import sys
+    import matplotlib.pyplot as plt
+    import numpy as np
+    from sklearn.metrics import (
+        average_precision_score,
+        classification_report,
+        precision_recall_curve,
+    )
+    from sklearn.model_selection import GridSearchCV
 
-    # Gets the parent directory of your current notebook folder
+    # 1. Setup path imports
     parent_dir = os.path.abspath(os.path.join(os.getcwd(), '..'))
-
-    # Adds it to the search path if it's not already there
     if parent_dir not in sys.path:
-        sys.path.append(parent_dir) 
+        sys.path.append(parent_dir)
 
     from Enum.PathEnum import PathEnum
     from data.data_helper import load_data
     from Preprocessing.preprocess import Preprocessing
 
+    # 2. Load and Preprocess Data
     preprocessor = Preprocessing(target_col='Class', factor=1.5)
-        
-    # 1. Read Data
+
     train_df = load_data(PathEnum.TRAIN_PATH.value)
     val_df = load_data(PathEnum.VAL_PATH.value)
     test_df = load_data(PathEnum.TEST_PATH.value)
 
-    # 2. Process Train set (Fit + Transform)
+    # Prevent data leakage: fit_transform ONLY on train set
     X_train, y_train, clip_bounds, scaler = preprocessor.fit_transform(train_df)
-
-    # 3. Process Validation set (Transform ONLY)
     X_val, y_val = preprocessor.transform(val_df, clip_bounds, scaler)
+    X_test, y_test = preprocessor.transform(test_df, clip_bounds, scaler)
 
-    # 4. Instantiate and fit custom Random Forest model
+    # 3. Define Hyperparameter Grid Search
+    print("--- Running Grid Search for Hyperparameters ---")
+    # param_grid = {
+    #     'n_estimators': [50],  # [5, 10, 15, ..., 50]
+    #     'max_depth': [9],         # [3, 4, 5, ..., 10]
+    # }
+
+    # Instantiate base estimator for grid search
+    # (Extract base model if Random Forest_model wraps RandomForestClassifier)
+    from sklearn.ensemble import RandomForestClassifier
+    # base_rf = RandomForestClassifier(
+    #     n_estimators=50,
+    #     max_depth=9,
+    #     class_weight={0: 1, 1: 3},
+    #     random_state=42,
+    #     n_jobs=-1
+    # )
+
+    # grid_search = GridSearchCV(
+    #     estimator=base_rf,
+    #     param_grid=param_grid,
+    #     scoring='average_precision',  # PR-AUC optimal for imbalanced fraud data
+    #     cv=5,
+    #     n_jobs=-1,
+    #     verbose=1
+    # )
+    # grid_search.fit(X_train, y_train)
+
+    # best_n_estimators = grid_search.best_params_['n_estimators']
+    # best_max_depth = grid_search.best_params_['max_depth']
+
+    # print(f"\nBest Parameters Found -> n_estimators: {best_n_estimators}, max_depth: {best_max_depth}")
+    # print(f"Best CV PR-AUC Score: {grid_search.best_score_:.4f}\n")
+
+    # 4. Instantiate and fit custom Random Forest model with tuned parameters
     clf = RandomForest_model(
-        metric='f1', 
-        n_estimators=100, 
-        max_depth=10, 
-        class_weights={0: 1, 1: 3}, 
+        metric='f1',
+        n_estimators=50,
+        max_depth=9,
+        class_weights={0: 1, 1: 3},
         random_state=42
     )
     clf.fit(X_train, y_train)
 
     print(f"Optimal Threshold Selected: {clf.best_threshold_:.4f}\n")
 
-    # Predict using the automatically calculated optimal threshold
-    y_pred = clf.predict(X_val)
+    # 5. Evaluate Predictions using Optimal Threshold
+    print("--- Classification Report (Train Set) ---")
+    y_pred_train = clf.predict(X_train)
+    print(classification_report(y_train, y_pred_train))
+
     print("--- Classification Report (Validation Set) ---")
-    print(classification_report(y_val, y_pred))
+    y_pred_val = clf.predict(X_val)
+    print(classification_report(y_val, y_pred_val))
 
-    # Plot the threshold curve
-    clf.plot_threshold_curve(X_val, y_val)
+    print("--- Classification Report (Test Set) ---")
+    y_pred_test = clf.predict(X_test)
+    print(classification_report(y_test, y_pred_test))
 
-    # Get predicted probabilities for the positive class
-    y_probs = clf.predict_proba(X_val)[:, 1]
+    # # 6. Visual Diagnostics
+    # if hasattr(clf, 'plot_threshold_curve'):
+    #     clf.plot_threshold_curve(X_val, y_val)
 
-    # Compute Precision, Recall, and Thresholds
-    precision, recall, thresholds = precision_recall_curve(y_val, y_probs)
+    # # Compute PR-AUC on Validation Set
+    # y_probs = clf.predict_proba(X_val)[:, 1]
+    # precision, recall, thresholds = precision_recall_curve(y_val, y_probs)
+    # ap_score = average_precision_score(y_val, y_probs)
 
-    # Calculate Area Under the PR Curve (PR-AUC)
-    ap_score = average_precision_score(y_val, y_probs)
+    # plt.figure(figsize=(8, 5))
+    # plt.plot(recall, precision, label=f'Random Forest (AP = {ap_score:.4f})', color='purple', lw=2)
+    
+    # # Highlight optimal operating threshold on PR curve
+    # idx = np.argmin(np.abs(thresholds - clf.best_threshold_))
+    # if idx < len(recalls):
+    #     plt.scatter(
+    #         recall[idx], precision[idx], 
+    #         color='red', s=80, zorder=5, 
+    #         label=f'Threshold = {clf.best_threshold_:.4f}'
+    #     )
 
-    # Plot Precision-Recall Curve
-    plt.figure(figsize=(8, 5))
-    plt.plot(recall, precision, label=f'Random Forest PR Curve (AP = {ap_score:.2f})', color='purple')
-    plt.xlabel('Recall (Sensitivity)')
-    plt.ylabel('Precision (Positive Predictive Value)')
-    plt.title('Precision-Recall Curve (Validation Set)')
-    plt.legend()
-    plt.grid(True)
-    plt.show() 
-    print(clf.best_threshold_)
+    # plt.xlabel('Recall (Sensitivity)')
+    # plt.ylabel('Precision (Positive Predictive Value)')
+    # plt.title(f'Precision-Recall Curve (Validation Set) | depth={best_max_depth}, n_est={best_n_estimators}')
+    # plt.legend(loc='lower left')
+    # plt.grid(True, alpha=0.3)
+    # plt.tight_layout()
+    # plt.show()
+
+    print(f"Final Optimal Threshold Saved: {clf.best_threshold_:.4f}")

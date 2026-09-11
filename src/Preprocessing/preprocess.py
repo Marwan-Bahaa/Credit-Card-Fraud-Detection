@@ -1,6 +1,19 @@
+import sys
+import os
+
+# Gets the parent directory of your current notebook folder
+parent_dir = os.path.abspath(os.path.join(os.getcwd(), '..'))
+
+# Adds it to the search path if it's not already there
+if parent_dir not in sys.path:
+    sys.path.append(parent_dir) 
+
+
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
+
+from data.data_helper import separate_X_y
 
 
 
@@ -12,9 +25,8 @@ class Preprocessing:
         # Stores learned bounds per column: {'col_name': (lower, upper)}
         self.clip_bounds = clip_bounds if clip_bounds is not None else {}
         self.scaler = StandardScaler()
-        self.feature_names = []
+       
 
-    # ==================== HELPER FUNCTIONS ====================
 
     def _apply_log(self, df, cols=['Time', 'Amount']):
         """Applies log1p transformation to specified features."""
@@ -24,14 +36,6 @@ class Preprocessing:
                 df_out[f'{col}_log'] = np.log1p(np.maximum(0, df_out[col]))
                 df_out = df_out.drop(columns=[col])
         return df_out
-
-    def _separate_X_y(self, df):
-        """Separates feature matrix X and target y."""
-        if self.target_col in df.columns:
-            X = df.drop(columns=[self.target_col])
-            y = df[self.target_col]
-            return X, y
-        return df, None
 
     def _calc_boundaries(self, df, columns=None, factor=None):
         """
@@ -69,7 +73,6 @@ class Preprocessing:
         return df_clipped
 
 
-    # ==================== MAIN PIPELINE FUNCTIONS ====================
 
     def fit_transform(self, train_df):
         """
@@ -89,9 +92,8 @@ class Preprocessing:
         df_log = self._apply_log(df_clipped, cols=['Time', 'Amount'])
 
         # 4. Separate X and y
-        X_train, y_train = self._separate_X_y(df_log)
-        self.feature_names = X_train.columns.tolist()
-
+        X_train, y_train = separate_X_y(df_log, self.target_col)
+      
         # 5. Fit & apply StandardScaler
         X_train_scaled = self.scaler.fit_transform(X_train) 
 
@@ -112,7 +114,7 @@ class Preprocessing:
         df_log = self._apply_log(df_clipped, cols=['Time', 'Amount'])
 
         # 3. Separate X and y
-        X_eval, y_eval = self._separate_X_y(df_log)
+        X_eval, y_eval = separate_X_y(df_log, self.target_col)
 
         # 4. Apply StandardScaler using fitted scaler parameters
         X_eval_scaled = scaler.transform(X_eval)
@@ -121,37 +123,31 @@ class Preprocessing:
         return X_eval_scaled, y_eval
 
 
-# ==================== MAIN EXECUTION ====================
+
 
 if __name__ == '__main__':
-    import sys
-    import os
-
-    # Gets the parent directory of your current notebook folder
-    parent_dir = os.path.abspath(os.path.join(os.getcwd(), '..'))
-
-    # Adds it to the search path if it's not already there
-    if parent_dir not in sys.path:
-        sys.path.append(parent_dir) 
-
     from Enum.PathEnum import PathEnum
-    from data.data_helper import load_data
+    from data.data_helper import load_data 
+
     preprocessor = Preprocessing(target_col='Class', factor=1.5)
      
     # 1. Read Data
     train_df = load_data(PathEnum.TRAIN_PATH.value)
     val_df = load_data(PathEnum.VAL_PATH.value)
-    test_df = load_data(PathEnum.TEST_PATH.value)
 
     # 3. Process Train set (Fit + Transform)
     X_train, y_train, clip_bounds, scaler = preprocessor.fit_transform(train_df)
 
     # 4. Process Validation and Test sets (Transform ONLY)
     X_val, y_val = preprocessor.transform(val_df, clip_bounds, scaler)
-    X_test, y_test = preprocessor.transform(test_df, clip_bounds, scaler)
-
+   
     # Check processed outputs
     print(f"X_train shape: {X_train.shape}")
     print(f"X_val shape:   {X_val.shape}")
-    print(f"X_test shape:  {X_test.shape}")
-    print(f"Columns after preprocessing: {X_train[:5]}...")
+
+    print(train_df.describe()) 
+    print(val_df.describe()) 
+
+    print(X_train[:]) 
+    print(X_val[:]) 
+

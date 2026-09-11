@@ -4,7 +4,7 @@ import json
 from sklearn.metrics import precision_recall_curve, average_precision_score
 from sklearn.metrics import classification_report, auc  
 
-def cls_report(model, train, val, test, log_file="metrics_history.log"):
+def cls_report(model_name, train, val, test, log_file="metrics_history.log"):
     """
     Evaluates classification reports across train, validation, and test splits,
     prints text reports, and appends structured JSON logs to a file.
@@ -26,7 +26,7 @@ def cls_report(model, train, val, test, log_file="metrics_history.log"):
             # Add context metadata to log entry
             log_entry = {
                 "split": split_name,
-                "model": model.__class__.__name__,
+                "model": model_name,
                 "metrics": dict_report,
             }
 

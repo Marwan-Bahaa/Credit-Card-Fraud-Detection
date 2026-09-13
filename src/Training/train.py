@@ -297,17 +297,3 @@ if __name__ == "__main__":
     save_model_pkl(model_pack=dic_nn, model_name='NN') 
     save_model_pkl(model_pack=dic_nn, model_name='KNN') 
     save_model_pkl(model_pack=test_data, model_name='test_data_prepared') 
-
-
-
-      
-
-
-
-
-
- 
-
-        
-
-         

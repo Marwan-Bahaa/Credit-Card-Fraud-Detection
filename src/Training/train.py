@@ -33,7 +33,7 @@ class Train:
         self.Preprocess_pipline = None 
 
 
-    def train_LR(x_train, y_train, x_val, y_val):
+    def train_LR(self,x_train, y_train, x_val, y_val):
         n_inner_cv = 3
         n_outer_cv = 5
         n_iter = 50
@@ -96,13 +96,13 @@ class Train:
         print(classification_report(y_val, y_pred))
         plot_pr_and_threshold_curves(y_val, y_prob)
 
-        return {'model':model, 'best thershould': model.best_threshold_, 'best parmters': best_parms}
+        return {'model':model, 'best thershould': model.best_threshould, 'best parmters': best_parms}
 
 
 
     
 
-    def train_RF(x_train, y_train, x_val, y_val):
+    def train_RF(self, x_train, y_train, x_val, y_val):
         n_inner_cv = 3
         n_outer_cv = 5
         n_iter = 50
@@ -157,10 +157,10 @@ class Train:
         print(classification_report(y_val, y_pred))
         plot_pr_and_threshold_curves(y_val, y_prob)
 
-        return {'model':model, 'best thershould': model.best_threshold_, 'best_parmters': best_parms} 
+        return {'model':model, 'best thershould': model.best_threshould, 'best_parmters': best_parms} 
     
 
-    def train_nn(x_train, y_train, x_val, y_val):
+    def train_nn(self, x_train, y_train, x_val, y_val):
         n_inner_cv = 3
         n_outer_cv = 5
         n_iter = 50
@@ -178,7 +178,7 @@ class Train:
         'batch_size': [64, 128, 512],
         'learning_rate_init': [0.001, 0.01, 0.1],
         'alpha': [0.001, 0.01, 0.025],
-        'max_iter': [500, 800, 1000, 2000]
+        'max_iter': [800, 1000, 2000, 3000]
         }
 
         nn_cv = MLPClassifier(random_state=42)
@@ -215,7 +215,7 @@ class Train:
         inner_search.fit(x_train, y_train)
         best_parms = inner_search.best_params_ 
         print(f'best parmters : {best_parms}') 
-        model = MLPClassifier(**best_parms) 
+        model = MLPClassifier(**best_parms, early_stopping=True) 
 
         model.fit(x_train, y_train) 
         y_pred = model.predict(x_val)
@@ -228,7 +228,7 @@ class Train:
         
 
 
-    def train_knn(X_train, y_train, X_val, y_val, random_seed=42):
+    def train_knn(self, X_train, y_train, X_val, y_val, random_seed=42):
 
         param_distributions = {
             'n_neighbors': [3, 5, 7, 9, 11, 13, 15, 17],
@@ -276,9 +276,10 @@ if __name__ == "__main__":
     df_val=load_data(PathEnum.VAL_PATH.value) 
     df_test=load_data(PathEnum.TEST_PATH.value)
 
-    X_train_scaled, y_train, clip_bounds, scaler = Preprocessing.fit_transform(df_train)
-    X_eval_scaled, y_eval = Preprocessing.transform(df_val, clip_bounds, scaler)
-    X_test_scaled, y_test = Preprocessing.transform(df_test, clip_bounds, scaler)
+    preprocessing = Preprocessing()
+    X_train_scaled, y_train, clip_bounds, scaler = preprocessing.fit_transform(df_train)
+    X_eval_scaled, y_eval = preprocessing.transform(df_val, clip_bounds, scaler)
+    X_test_scaled, y_test = preprocessing.transform(df_test, clip_bounds, scaler)
 
     Train_pipline = Train()     
     print('Train LR')

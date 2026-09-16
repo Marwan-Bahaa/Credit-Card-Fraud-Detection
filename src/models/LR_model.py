@@ -64,12 +64,12 @@ class LogisticRegression_model(BaseEstimator, ClassifierMixin):
 
 
     def predict_proba(self, X_scaled):
-        return self.model.predict_proba(X_scaled)
+        return self.model.predict_proba(X_scaled)[:,1]
 
 
     def predict(self, X_scaled):
         # Predicts using the optimal threshold discovered during .fit()
-        y_probs = self.predict_proba(X_scaled)[:, 1]
+        y_probs = self.predict_proba(X_scaled)
         return (y_probs >= self.best_threshould).astype(int)
 
 

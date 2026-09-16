@@ -35,7 +35,7 @@ def cls_report(model_name, train, val, test, log_file="metrics_history.log"):
             f.write("\n" + "=" * 40 + "\n")
 
 
-def plot_pr_and_threshold_curves(y_true, y_probs, best_threshold=None, metric_name="AP"):
+def plot_pr_and_threshold_curves(y_true, y_probs, best_threshold=None, metric_name="AP", model_name='None'):
     """
     Plots the Precision-Recall curve alongside Precision/Recall vs. Threshold curves.
     
@@ -89,8 +89,8 @@ def plot_pr_and_threshold_curves(y_true, y_probs, best_threshold=None, metric_na
     axes[1].set_title(f'Threshold Optimization ({metric_name.upper()})')
     axes[1].legend(loc='lower left')
     axes[1].grid(True)
-
-    plt.tight_layout()
-    plt.show()
+    # Replace plt.show() on line 94 with:
+    plt.savefig(f"{model_name}_evaluation_plot.png", bbox_inches="tight")
+    plt.close()  # Free up memory
 
     return pr_auc, ap_score

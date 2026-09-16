@@ -12,14 +12,19 @@ if parent_dir not in sys.path:
 
 from Enum.PathEnum import PathEnum
 from data.data_helper import load_data
-from Preprocessing.preprocess import Preprocessing
+from Preprocessing.preprocess import Preprocessing 
+from models.load_pkl import load_model_pkl
 from models.LR_model import LogisticRegression_model 
 from models.RF_model import  RandomForest_model
 from sklearn.metrics import f1_score, make_scorer, classification_report 
 from sklearn.model_selection import StratifiedKFold, RandomizedSearchCV, cross_val_score  
 from testing.evaluate import cls_report, plot_pr_and_threshold_curves 
 from sklearn.neural_network import MLPClassifier 
-from sklearn.neighbors import KNeighborsClassifier 
+from sklearn.neighbors import KNeighborsClassifier  
+from sklearn.ensemble._voting import VotingClassifier  
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier 
+
 
 
 class Train: 
@@ -49,7 +54,7 @@ class Train:
                         {0: 0.25, 1: 0.75},
                         {0: 0.15, 1: 0.85},
                     ],
-                    'max_iter': [500, 1000, 1500],
+                    'max_iter': [1000,1500, 2500],
                 }
 
             
@@ -94,7 +99,7 @@ class Train:
         y_prob = model.predict_proba(x_val) 
 
         print(classification_report(y_val, y_pred))
-        plot_pr_and_threshold_curves(y_val, y_prob)
+        plot_pr_and_threshold_curves(y_val, y_prob, model.best_threshould, model_name='LR')
 
         return {'model':model, 'best thershould': model.best_threshould, 'best parmters': best_parms}
 
@@ -105,13 +110,14 @@ class Train:
     def train_RF(self, x_train, y_train, x_val, y_val):
         n_inner_cv = 3
         n_outer_cv = 5
-        n_iter = 50
+        n_iter = 30
 
         param_distributions = {
-            'n_estimators': [200, 400, 600 ,800],
-            'min_samples_leaf': [2, 5, 10, 15],
-            'min_samples_split': [5, 10, 20],
-            'class_weight': [{0: 0.20, 1: 0.80}, 'balanced_subsample', {0: 0.15, 1: 0.85}],
+            'n_estimators': [100, 200, 300, 400, 800],
+            'min_samples_leaf': [2, 5, 10],
+            'min_samples_split': [5, 10],
+            'class_weight': [{0: 0.20, 1: 0.80}, 'balanced_subsample', {0: 0.15, 1: 0.85}], 
+            'max_depth':[6, 7, 8, 9],
         }
             
         lr = RandomForest_model(random_state=42)
@@ -147,17 +153,17 @@ class Train:
         print("Fitting final model...")
         inner_search.fit(x_train, y_train)
         best_parms = inner_search.best_params_ 
-        print(f'best parmters : {best_parms}') 
-        model = LogisticRegression_model(**best_parms) 
+        print(f'best parmters : {best_parms}')  
+        model = RandomForest_model(**best_parms) 
 
         model.fit(x_train, y_train) 
         y_pred = model.predict(x_val)
-        y_prob = model.predict_proba(x_val) 
+        y_prob = model.predict_proba(x_val)[:,1] 
     
         print(classification_report(y_val, y_pred))
-        plot_pr_and_threshold_curves(y_val, y_prob)
+        plot_pr_and_threshold_curves(y_val, y_prob, model.best_threshold_, model_name='RF')
 
-        return {'model':model, 'best thershould': model.best_threshould, 'best_parmters': best_parms} 
+        return {'model':model, 'best thershould': model.best_threshold_, 'best_parmters': model.get_params()} 
     
 
     def train_nn(self, x_train, y_train, x_val, y_val):
@@ -178,7 +184,7 @@ class Train:
         'batch_size': [64, 128, 512],
         'learning_rate_init': [0.001, 0.01, 0.1],
         'alpha': [0.001, 0.01, 0.025],
-        'max_iter': [800, 1000, 2000, 3000]
+        'max_iter': [2000, 3000]
         }
 
         nn_cv = MLPClassifier(random_state=42)
@@ -213,18 +219,20 @@ class Train:
 
         print("Fitting final model...")
         inner_search.fit(x_train, y_train)
-        best_parms = inner_search.best_params_ 
+        best_parms = inner_search.best_params_  
+       
         print(f'best parmters : {best_parms}') 
-        model = MLPClassifier(**best_parms, early_stopping=True) 
+      
+        model = MLPClassifier(**best_parms, early_stopping=True, random_state=42) 
 
         model.fit(x_train, y_train) 
         y_pred = model.predict(x_val)
-        y_prob = model.predict_proba(x_val) 
+        y_prob = model.predict_proba(x_val)[:,1] 
     
         print(classification_report(y_val, y_pred))
-        plot_pr_and_threshold_curves(y_val, y_prob)
+        plot_pr_and_threshold_curves(y_val, y_prob, model_name='NN')
 
-        return {'model':model, 'best thershould': model.best_threshold_, 'best_parmters': best_parms}
+        return {'model':model, 'best thershould': None, 'best_parmters': best_parms}
         
 
 
@@ -265,6 +273,32 @@ class Train:
         return {"model": knn , "parameters": parameters}
 
 
+    def train_voting_classifier(self, X_train, y_train, X_val, y_val):
+        lr_parms=load_model_pkl('/home/marwan/Downloads/Machine Learning/Credit-Card-Fraud-Detection/src/models/trained_models/LR')['best parmters'] 
+        rf_parms=load_model_pkl('/home/marwan/Downloads/Machine Learning/Credit-Card-Fraud-Detection/src/models/trained_models/RF')['best_parmters'] 
+        nn_parms=load_model_pkl('/home/marwan/Downloads/Machine Learning/Credit-Card-Fraud-Detection/src/models/trained_models/NN')['best_parmters'] 
+
+        # Define the base classifiers
+        lr = LogisticRegression(**lr_parms)
+        rf = RandomForestClassifier(class_weight=rf_parms['class_weight'], max_depth=rf_parms['max_depth'], min_samples_leaf=rf_parms['min_samples_leaf'], min_samples_split=rf_parms['min_samples_split'], n_estimators=rf_parms['n_estimators'], random_state=42)
+        nn = MLPClassifier(**nn_parms)
+
+        # Create a voting classifier
+        voting_clf = VotingClassifier(
+            estimators=[('lr', lr), ('rf', rf), ('nn', nn)], 
+            weights=[0.04, 0.80 , 0.16],
+            voting='soft', 
+        )
+
+        # Fit the voting classifier
+        voting_clf.fit(X_train, y_train)
+        y_prob = voting_clf.predict_proba(X_val)[:, 1]
+        # Evaluate on validation set
+        y_pred = voting_clf.predict(X_val)
+        print(classification_report(y_val, y_pred))
+        plot_pr_and_threshold_curves(y_val, y_prob, None, model_name='voting_classifier')
+        return {"model": voting_clf} 
+    
 
 if __name__ == "__main__":
     from Enum.PathEnum import PathEnum 
@@ -284,17 +318,22 @@ if __name__ == "__main__":
     Train_pipline = Train()     
     print('Train LR')
     dic_lr = Train_pipline.train_LR(X_train_scaled, y_train, X_eval_scaled, y_eval)  
+    save_model_pkl(model_pack=dic_lr, model_name='LR')  
+
     print('Train RF')
     dic_rf = Train_pipline.train_RF(X_train_scaled, y_train, X_eval_scaled, y_eval) 
+    save_model_pkl(model_pack=dic_rf, model_name='RF') 
+
     print('Train NN')
     dic_nn = Train_pipline.train_nn(X_train_scaled, y_train, X_eval_scaled, y_eval)  
+    save_model_pkl(model_pack=dic_nn, model_name='NN') 
+
     print('Train KNN')
     dic_knn = Train_pipline.train_knn(X_train_scaled, y_train, X_eval_scaled, y_eval)  
+    save_model_pkl(model_pack=dic_knn, model_name='KNN') 
     
-    test_data = {'X':X_test_scaled, 'Y':y_test}
+    train_voting = Train_pipline.train_voting_classifier(X_train_scaled, y_train, X_eval_scaled, y_eval) 
+    save_model_pkl(model_pack=train_voting, model_name='voting_classifier') 
 
-    save_model_pkl(model_pack=dic_lr, model_name='LR')  
-    save_model_pkl(model_pack=dic_rf, model_name='RF') 
-    save_model_pkl(model_pack=dic_nn, model_name='NN') 
-    save_model_pkl(model_pack=dic_nn, model_name='KNN') 
+    test_data = {'X':X_test_scaled, 'Y':y_test}
     save_model_pkl(model_pack=test_data, model_name='test_data_prepared') 

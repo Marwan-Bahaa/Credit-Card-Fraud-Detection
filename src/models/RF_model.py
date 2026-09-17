@@ -62,10 +62,10 @@ class RandomForest_model(BaseEstimator, ClassifierMixin):
             raise ValueError(f"Unknown metric '{self.metric}'. Choose 'f1', 'youden', or 'balanced_accuracy'.")
 
     def predict_proba(self, X):
-        return self.model.predict_proba(X)
+        return self.model.predict_proba(X)[:, 1]
 
     def predict(self, X):
-        y_probs = self.predict_proba(X)[:, 1]
+        y_probs = self.predict_proba(X)
         return (y_probs >= self.best_threshold_).astype(int)
 
 

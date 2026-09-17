@@ -108,7 +108,8 @@ if __name__ == '__main__':
 
     print(f"Optimal Threshold Selected: {clf.best_threshould:.4f}\n")
 
-    y_pred = clf.predict(X_test)
+    y_pred = clf.predict(X_test) 
+    print(f'y_pred = {y_pred.shape}')
     y_prop = clf.predict_proba(X_test)[:, 1]
     print(y_prop.shape)
 

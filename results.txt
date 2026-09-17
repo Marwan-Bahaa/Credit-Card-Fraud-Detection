@@ -1,0 +1,155 @@
+Classification report for LogisticRegression_model on train data:
+              precision    recall  f1-score   support
+
+           0       1.00      1.00      1.00    170579
+           1       0.90      0.77      0.83       305
+
+    accuracy                           1.00    170884
+   macro avg       0.95      0.88      0.91    170884
+weighted avg       1.00      1.00      1.00    170884
+
+
+========================================
+
+Classification report for LogisticRegression_model on eval data:
+              precision    recall  f1-score   support
+
+           0       1.00      1.00      1.00     56870
+           1       0.87      0.79      0.83        90
+
+    accuracy                           1.00     56960
+   macro avg       0.93      0.89      0.91     56960
+weighted avg       1.00      1.00      1.00     56960
+
+
+========================================
+
+Classification report for LogisticRegression_model on test data:
+              precision    recall  f1-score   support
+
+           0       1.00      1.00      1.00     56863
+           1       0.80      0.82      0.81        97
+
+    accuracy                           1.00     56960
+   macro avg       0.90      0.91      0.91     56960
+weighted avg       1.00      1.00      1.00     56960
+
+
+========================================
+
+Classification report for RandomForest_model on train data:
+              precision    recall  f1-score   support
+
+           0       1.00      1.00      1.00    170579
+           1       0.94      0.89      0.91       305
+
+    accuracy                           1.00    170884
+   macro avg       0.97      0.94      0.96    170884
+weighted avg       1.00      1.00      1.00    170884
+
+
+========================================
+
+Classification report for RandomForest_model on eval data:
+              precision    recall  f1-score   support
+
+           0       1.00      1.00      1.00     56870
+           1       0.88      0.83      0.86        90
+
+    accuracy                           1.00     56960
+   macro avg       0.94      0.92      0.93     56960
+weighted avg       1.00      1.00      1.00     56960
+
+
+========================================
+
+Classification report for RandomForest_model on test data:
+              precision    recall  f1-score   support
+
+           0       1.00      1.00      1.00     56863
+           1       0.81      0.85      0.83        97
+
+    accuracy                           1.00     56960
+   macro avg       0.91      0.92      0.91     56960
+weighted avg       1.00      1.00      1.00     56960
+
+
+========================================
+
+Classification report for MLPClassifier on train data:
+              precision    recall  f1-score   support
+
+           0       1.00      1.00      1.00    170579
+           1       0.89      0.79      0.84       305
+
+    accuracy                           1.00    170884
+   macro avg       0.94      0.89      0.92    170884
+weighted avg       1.00      1.00      1.00    170884
+
+
+========================================
+
+Classification report for MLPClassifier on eval data:
+              precision    recall  f1-score   support
+
+           0       1.00      1.00      1.00     56870
+           1       0.86      0.79      0.82        90
+
+    accuracy                           1.00     56960
+   macro avg       0.93      0.89      0.91     56960
+weighted avg       1.00      1.00      1.00     56960
+
+
+========================================
+
+Classification report for MLPClassifier on test data:
+              precision    recall  f1-score   support
+
+           0       1.00      1.00      1.00     56863
+           1       0.75      0.82      0.79        97
+
+    accuracy                           1.00     56960
+   macro avg       0.88      0.91      0.89     56960
+weighted avg       1.00      1.00      1.00     56960
+
+
+========================================
+
+Classification report for VotingClassifier on train data:
+              precision    recall  f1-score   support
+
+           0       1.00      1.00      1.00    170579
+           1       0.96      0.85      0.90       305
+
+    accuracy                           1.00    170884
+   macro avg       0.98      0.92      0.95    170884
+weighted avg       1.00      1.00      1.00    170884
+
+
+========================================
+
+Classification report for VotingClassifier on eval data:
+              precision    recall  f1-score   support
+
+           0       1.00      1.00      1.00     56870
+           1       0.90      0.79      0.84        90
+
+    accuracy                           1.00     56960
+   macro avg       0.95      0.89      0.92     56960
+weighted avg       1.00      1.00      1.00     56960
+
+
+========================================
+
+Classification report for VotingClassifier on test data:
+              precision    recall  f1-score   support
+
+           0       1.00      1.00      1.00     56863
+           1       0.82      0.82      0.82        97
+
+    accuracy                           1.00     56960
+   macro avg       0.91      0.91      0.91     56960
+weighted avg       1.00      1.00      1.00     56960
+
+
+========================================

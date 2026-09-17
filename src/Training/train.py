@@ -158,7 +158,7 @@ class Train:
 
         model.fit(x_train, y_train) 
         y_pred = model.predict(x_val)
-        y_prob = model.predict_proba(x_val)[:,1] 
+        y_prob = model.predict_proba(x_val) 
     
         print(classification_report(y_val, y_pred))
         plot_pr_and_threshold_curves(y_val, y_prob, model.best_threshold_, model_name='RF')
@@ -313,7 +313,7 @@ if __name__ == "__main__":
     preprocessing = Preprocessing()
     X_train_scaled, y_train, clip_bounds, scaler = preprocessing.fit_transform(df_train)
     X_eval_scaled, y_eval = preprocessing.transform(df_val, clip_bounds, scaler)
-    X_test_scaled, y_test = preprocessing.transform(df_test, clip_bounds, scaler)
+    X_test_scaled, y_test = preprocessing.transform(df_test, clip_bounds, scaler) 
 
     Train_pipline = Train()     
     print('Train LR')
@@ -337,3 +337,4 @@ if __name__ == "__main__":
 
     test_data = {'X':X_test_scaled, 'Y':y_test}
     save_model_pkl(model_pack=test_data, model_name='test_data_prepared') 
+ 

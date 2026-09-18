@@ -13,7 +13,7 @@ from sklearn.preprocessing import StandardScaler
 from data.data_helper import separate_X_y, balance_data_transformation
 from helper_functions import load_config 
 
-config = load_config('Config/config.yaml')
+config = load_config('/home/marwan/Downloads/Machine Learning/Credit-Card-Fraud-Detection/src/Config/config.yaml')
 
 
 class Preprocessing:

@@ -16,7 +16,7 @@ from Enum.PathEnum import PathEnum
 from data.data_helper import load_data
 from Preprocessing.preprocess import Preprocessing 
 from helper_functions import * 
-
+from evaluate import *
 
 
 class FocalLoss(nn.Module):
@@ -98,9 +98,9 @@ if __name__ == "__main__":
     writer = SummaryWriter(log_dir=f"runs/{run_name}_SGD_optimizer")
 
     # Uncomment the line below to load from a checkpoint after training.
-    checkpoint_id = 400
-    path = f'models/focal_loss_checkpoints/checkpoint_epoch_{checkpoint_id}.pth'
-    start_epoch = load_checkpoint(model, path) + 1
+    # checkpoint_id = 400
+    # path = f'models/focal_loss_checkpoints/checkpoint_epoch_{checkpoint_id}.pth'
+    # start_epoch = load_checkpoint(model, path) + 1
 
     
     # # training loop 

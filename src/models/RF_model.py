@@ -11,7 +11,7 @@ class RandomForest_model(BaseEstimator, ClassifierMixin):
         self.n_estimators = n_estimators
         self.max_depth = max_depth
         self.min_samples_split = min_samples_split
-        self.class_weights = class_weight
+        self.class_weight = class_weight
         self.n_jobs = n_jobs
         self.random_state = random_state 
         self.min_samples_leaf=min_samples_leaf
@@ -20,7 +20,7 @@ class RandomForest_model(BaseEstimator, ClassifierMixin):
             n_estimators=self.n_estimators,
             max_depth=self.max_depth,
             min_samples_split=self.min_samples_split,
-            class_weight=self.class_weights,
+            class_weight=self.class_weight,
             n_jobs=self.n_jobs,
             random_state=self.random_state, 
             min_samples_leaf=self.min_samples_leaf, 
@@ -62,10 +62,10 @@ class RandomForest_model(BaseEstimator, ClassifierMixin):
             raise ValueError(f"Unknown metric '{self.metric}'. Choose 'f1', 'youden', or 'balanced_accuracy'.")
 
     def predict_proba(self, X):
-        return self.model.predict_proba(X)
+        return self.model.predict_proba(X)[:, 1]
 
     def predict(self, X):
-        y_probs = self.predict_proba(X)[:, 1]
+        y_probs = self.predict_proba(X)
         return (y_probs >= self.best_threshold_).astype(int)
 
 

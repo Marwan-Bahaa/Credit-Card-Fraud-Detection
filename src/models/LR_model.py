@@ -13,15 +13,15 @@ class LogisticRegression_model(BaseEstimator, ClassifierMixin):
         self.solver = solver
         self.max_iter = max_iter
         self.random_state = random_state 
-        self.class_wights = class_weight 
+        self.class_weight = class_weight 
         self.penalty = penalty
-        self.best_threshold_ = best_threshould
+        self.best_threshould = best_threshould
         self.model = LogisticRegression(
             C=self.C, 
             solver=self.solver,
             max_iter=self.max_iter,
             random_state=self.random_state,
-            class_weight=self.class_wights, 
+            class_weight=self.class_weight, 
             penalty=self.penalty,             
         )
         
@@ -32,7 +32,7 @@ class LogisticRegression_model(BaseEstimator, ClassifierMixin):
     
         y_probs = self.model.predict_proba(X_scaled)[:, 1]
         
-        self.best_threshold_ = self._find_best_threshold(y, y_probs)
+        self.best_threshould = self._find_best_threshold(y, y_probs)
         return self
 
 
@@ -64,13 +64,13 @@ class LogisticRegression_model(BaseEstimator, ClassifierMixin):
 
 
     def predict_proba(self, X_scaled):
-        return self.model.predict_proba(X_scaled)
+        return self.model.predict_proba(X_scaled)[:,1]
 
 
     def predict(self, X_scaled):
         # Predicts using the optimal threshold discovered during .fit()
-        y_probs = self.predict_proba(X_scaled)[:, 1]
-        return (y_probs >= self.best_threshold_).astype(int)
+        y_probs = self.predict_proba(X_scaled)
+        return (y_probs >= self.best_threshould).astype(int)
 
 
 
@@ -106,11 +106,12 @@ if __name__ == '__main__':
     clf = LogisticRegression_model(metric='f1', random_state=42, max_iter=5000)
     clf.fit(X_train, y_train)
 
-    print(f"Optimal Threshold Selected: {clf.best_threshold_:.4f}\n")
+    print(f"Optimal Threshold Selected: {clf.best_threshould:.4f}\n")
 
-    y_pred = clf.predict(X_test)
+    y_pred = clf.predict(X_test) 
+    print(f'y_pred = {y_pred.shape}')
     y_prop = clf.predict_proba(X_test)[:, 1]
     print(y_prop.shape)
 
     print(classification_report(y_test, y_pred)) 
-    plot_pr_and_threshold_curves(y_test, y_prop, clf.best_threshold_)
+    plot_pr_and_threshold_curves(y_test, y_prop, clf.best_threshould)

@@ -4,7 +4,7 @@ import json
 from sklearn.metrics import precision_recall_curve, average_precision_score
 from sklearn.metrics import classification_report, auc  
 
-def cls_report(model, train, val, test, log_file="metrics_history.log"):
+def cls_report(model_name, train, val, test, log_file="metrics_history.log"):
     """
     Evaluates classification reports across train, validation, and test splits,
     prints text reports, and appends structured JSON logs to a file.
@@ -26,7 +26,7 @@ def cls_report(model, train, val, test, log_file="metrics_history.log"):
             # Add context metadata to log entry
             log_entry = {
                 "split": split_name,
-                "model": model.__class__.__name__,
+                "model": model_name,
                 "metrics": dict_report,
             }
 
@@ -35,7 +35,7 @@ def cls_report(model, train, val, test, log_file="metrics_history.log"):
             f.write("\n" + "=" * 40 + "\n")
 
 
-def plot_pr_and_threshold_curves(y_true, y_probs, best_threshold=None, metric_name="AP"):
+def plot_pr_and_threshold_curves(y_true, y_probs, best_threshold=None, metric_name="AP", model_name='None'):
     """
     Plots the Precision-Recall curve alongside Precision/Recall vs. Threshold curves.
     
@@ -89,8 +89,8 @@ def plot_pr_and_threshold_curves(y_true, y_probs, best_threshold=None, metric_na
     axes[1].set_title(f'Threshold Optimization ({metric_name.upper()})')
     axes[1].legend(loc='lower left')
     axes[1].grid(True)
-
-    plt.tight_layout()
-    plt.show()
+    # Replace plt.show() on line 94 with:
+    plt.savefig(f"{model_name}_evaluation_plot.png", bbox_inches="tight")
+    plt.close()  # Free up memory
 
     return pr_auc, ap_score

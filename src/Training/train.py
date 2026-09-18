@@ -13,12 +13,12 @@ if parent_dir not in sys.path:
 from Enum.PathEnum import PathEnum
 from data.data_helper import load_data
 from Preprocessing.preprocess import Preprocessing 
-from models.load_pkl import load_model_pkl
+from helper_functions import load_model, save_model_pkl
 from models.LR_model import LogisticRegression_model 
 from models.RF_model import  RandomForest_model
 from sklearn.metrics import f1_score, make_scorer, classification_report 
 from sklearn.model_selection import StratifiedKFold, RandomizedSearchCV, cross_val_score  
-from testing.evaluate import cls_report, plot_pr_and_threshold_curves 
+from evaluate import cls_report, plot_pr_and_threshold_curves 
 from sklearn.neural_network import MLPClassifier 
 from sklearn.neighbors import KNeighborsClassifier  
 from sklearn.ensemble._voting import VotingClassifier  
@@ -274,9 +274,9 @@ class Train:
 
 
     def train_voting_classifier(self, X_train, y_train, X_val, y_val):
-        lr_parms=load_model_pkl('/home/marwan/Downloads/Machine Learning/Credit-Card-Fraud-Detection/src/models/trained_models/LR')['best parmters'] 
-        rf_parms=load_model_pkl('/home/marwan/Downloads/Machine Learning/Credit-Card-Fraud-Detection/src/models/trained_models/RF')['best_parmters'] 
-        nn_parms=load_model_pkl('/home/marwan/Downloads/Machine Learning/Credit-Card-Fraud-Detection/src/models/trained_models/NN')['best_parmters'] 
+        lr_parms=load_model('/home/marwan/Downloads/Machine Learning/Credit-Card-Fraud-Detection/src/models/trained_models/LR')['best parmters'] 
+        rf_parms=load_model('/home/marwan/Downloads/Machine Learning/Credit-Card-Fraud-Detection/src/models/trained_models/RF')['best_parmters'] 
+        nn_parms=load_model('/home/marwan/Downloads/Machine Learning/Credit-Card-Fraud-Detection/src/models/trained_models/NN')['best_parmters'] 
 
         # Define the base classifiers
         lr = LogisticRegression(**lr_parms)
@@ -304,7 +304,7 @@ if __name__ == "__main__":
     from Enum.PathEnum import PathEnum 
     from data.data_helper import load_data 
     from Preprocessing.preprocess import Preprocessing
-    from models.save_model import save_model_pkl 
+    from helper_functions import save_model_pkl
 
     df_train=load_data(PathEnum.TRAIN_PATH.value)
     df_val=load_data(PathEnum.VAL_PATH.value) 
@@ -333,8 +333,4 @@ if __name__ == "__main__":
     save_model_pkl(model_pack=dic_knn, model_name='KNN') 
     
     train_voting = Train_pipline.train_voting_classifier(X_train_scaled, y_train, X_eval_scaled, y_eval) 
-    save_model_pkl(model_pack=train_voting, model_name='voting_classifier') 
-
-    test_data = {'X':X_test_scaled, 'Y':y_test}
-    save_model_pkl(model_pack=test_data, model_name='test_data_prepared') 
- 
+    save_model_pkl(model_pack=train_voting, model_name='voting_classifier')  

@@ -8,13 +8,12 @@ parent_dir = os.path.abspath(os.path.join(os.getcwd(), '..'))
 if parent_dir not in sys.path:
     sys.path.append(parent_dir) 
 
-
 import numpy as np
-import pandas as pd
 from sklearn.preprocessing import StandardScaler
+from data.data_helper import separate_X_y, balance_data_transformation
+from helper_functions import load_config 
 
-from data.data_helper import separate_X_y
-
+config = load_config('Config/config.yaml')
 
 
 class Preprocessing:
@@ -79,23 +78,31 @@ class Preprocessing:
         Executes pipeline on TRAIN data:
         Calculate Bounds -> Clip Outliers -> Log Transform -> Standard Scaling (fits scaler)
         """
-        #remove dublicated  
-        train_df.drop_duplicates().reset_index(drop=True)
+        if config['preprocessing']['drop_duplicates']:
+            train_df = train_df.drop_duplicates().reset_index(drop=True)
 
-        # 1. Learn IQR bounds on TRAIN features
-        self._calc_boundaries(train_df)
+        if config['preprocessing']['clip_outliers']:
+           self._calc_boundaries(train_df)
 
-        # 2. Clip outliers using learned bounds
-        df_clipped = self._clip_outliers(train_df)
+        if config['preprocessing']['clip_outliers']:
+           self._calc_boundaries(train_df)
+           df_clipped = self._clip_outliers(train_df)
+        else:
+            df_clipped = train_df
 
-        # 3. Apply log transform on Time and Amount
-        df_log = self._apply_log(df_clipped, cols=['Time', 'Amount'])
+        if config['preprocessing']['log_transform']:
+            df_log = self._apply_log(df_clipped, cols=['Time', 'Amount'])
 
-        # 4. Separate X and y
-        X_train, y_train = separate_X_y(df_log, self.target_col)
-      
-        # 5. Fit & apply StandardScaler
-        X_train_scaled = self.scaler.fit_transform(X_train) 
+        if config['preprocessing']['standard_scaling']:
+            X_train, y_train = separate_X_y(df_log, self.target_col)
+
+            X_train_scaled = self.scaler.fit_transform(X_train)
+        else:
+            X_train, y_train = separate_X_y(df_log, self.target_col)
+            X_train_scaled = X_train
+
+        if config['preprocessing']['balancing']['do_balance']:
+           X_train_scaled, y_train = balance_data_transformation(X_train_scaled, y_train, config['preprocessing']['balancing'], config['preprocessing']['balancing']['sampling_strategy'], config['preprocessing']['balancing']['k_neighbors'], config['preprocessing']['balancing']['random_state'])
 
         return X_train_scaled, y_train, self.clip_bounds, self.scaler
 
@@ -104,21 +111,30 @@ class Preprocessing:
         Executes pipeline on VAL, TEST, or INFERENCE data:
         Clip Outliers (uses stored/passed bounds) -> Log Transform -> Standard Scaling (uses train scaler)
         """
-        #remove dublicated  
-        df.drop_duplicates().reset_index(drop=True)
+        
+        if config['preprocessing']['drop_duplicates']:
+            df = df.drop_duplicates().reset_index(drop=True)
 
-        # 1. Clip outliers using stored bounds or passed custom bounds
-        df_clipped = self._clip_outliers(df, bounds=custom_bounds)
+        
+        if config['preprocessing']['clip_outliers']:
+            df_clipped = self._clip_outliers(df, bounds=custom_bounds)
+        else:
+            df_clipped = df
 
-        # 2. Apply log transform on Time and Amount
-        df_log = self._apply_log(df_clipped, cols=['Time', 'Amount'])
+        if config['preprocessing']['log_transform']:
+            df_log = self._apply_log(df_clipped, cols=['Time', 'Amount'])
+        else:
+            df_log = df_clipped
 
-        # 3. Separate X and y
         X_eval, y_eval = separate_X_y(df_log, self.target_col)
 
-        # 4. Apply StandardScaler using fitted scaler parameters
-        X_eval_scaled = scaler.transform(X_eval)
-        
+        if config['preprocessing']['standard_scaling']:
+            X_eval_scaled = scaler.transform(X_eval)
+        else:
+            X_eval_scaled = X_eval 
+
+        if config['preprocessing']['balancing']['do_balance']:
+            X_eval_scaled, y_eval = balance_data_transformation(X_eval_scaled, y_eval, config['preprocessing']['balancing'], config['preprocessing']['balancing']['sampling_strategy'], config['preprocessing']['balancing']['k_neighbors'], config['preprocessing']['balancing']['random_state'])    
 
         return X_eval_scaled, y_eval
 
@@ -131,17 +147,17 @@ if __name__ == '__main__':
 
     preprocessor = Preprocessing(target_col='Class', factor=1.5)
      
-    # 1. Read Data
+
     train_df = load_data(PathEnum.TRAIN_PATH.value)
     val_df = load_data(PathEnum.VAL_PATH.value)
 
-    # 3. Process Train set (Fit + Transform)
+
     X_train, y_train, clip_bounds, scaler = preprocessor.fit_transform(train_df)
 
-    # 4. Process Validation and Test sets (Transform ONLY)
+
     X_val, y_val = preprocessor.transform(val_df, clip_bounds, scaler)
    
-    # Check processed outputs
+    
     print(f"X_train shape: {X_train.shape}")
     print(f"X_val shape:   {X_val.shape}")
 

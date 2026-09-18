@@ -15,11 +15,8 @@ from torch.utils.tensorboard import SummaryWriter
 from Enum.PathEnum import PathEnum 
 from data.data_helper import load_data
 from Preprocessing.preprocess import Preprocessing 
+from helper_functions import * 
 
-from sklearn.metrics import auc, classification_report, confusion_matrix, precision_recall_curve
-import matplotlib.pyplot as plt
-import seaborn as sns 
-from numpy import argmax
 
 
 class FocalLoss(nn.Module):
@@ -59,92 +56,6 @@ class FraudDetectionNN(nn.Module):
         x = self.tanh(self.bn3(self.hidden3(x)))
         x = self.output(x)
         return x
-
-# Helper functions 
-def eval_classification_report_confusion_matrix(y_pred, y_true, title="" ,save_png=False, path="", digits=5 ):
-
-    print(f'{title} Classification Report')
-    print(classification_report(y_pred=y_pred, y_true=y_true, digits=digits))   
-    report_stats = classification_report(y_pred=y_pred, y_true=y_true, digits=digits, output_dict=True)
-
-    labels = ['True Negative', 'False Positive' , 'False Negative', 'True Positive'] # order of confusion matrix labels
-    cm = confusion_matrix(y_true=y_true, y_pred=y_pred)
-    cm_flat = cm.flatten()
-
-    plt.figure(figsize=(8, 6))
-    sns.heatmap(cm, annot=False, fmt='d', cmap='Blues')
-    for i, txt in enumerate(cm_flat):
-        plt.text(i % 2 + 0.5, i // 2 + 0.5, f"{labels[i]}\n{txt}", ha='center', va='center', color='black')
-    plt.title(f'Confusion Matrix of {title}')
-    plt.xlabel('Predicted')
-    plt.ylabel('Truth')
-
-    if save_png: 
-        plt.savefig(f'{path}/{title} Confusion Matrix.png')
-    else: 
-        plt.show()
-
-    return report_stats
-
-
-def eval_best_threshold(y_pred,y_true , with_repect_to="f1_score"): 
-    """
-    Get best threshold from precision recall curve with respect to f1_score, precision or recall
-
-    parameters:
-    y_pred: predicted values
-    y_true: true values
-    with_repect_to: "f1_score" , "precision" or "recall"
-
-    returns:
-    optimal threshold and f1 scores
-    """
-    precision, recall, thresholds = precision_recall_curve(y_score=y_pred,y_true=y_true)
-    f1_scores = ((2 * precision * recall) / (precision + recall))
-
-    if with_repect_to == "f1_score":
-        optimal_threshold_index = argmax(f1_scores)
-    elif with_repect_to == "precision":
-        optimal_threshold_index = argmax(precision)
-    elif with_repect_to == "recall":
-        optimal_threshold_index = argmax(recall)
-    else:
-        raise ValueError("Invalid value for with_repect_to. Please choose 'f1_score', 'precision' or 'recall'.")        
-
-    optimal_threshold = thresholds[optimal_threshold_index]
-    print("Optimal Threshold:", optimal_threshold , "F1 Score:", f1_scores[optimal_threshold_index])
-    return optimal_threshold , f1_scores
-
-def save_checkpoint(model, epoch, checkpoint_dir='models/focal_loss_checkpoints', title=''):
-    checkpoint_dir = checkpoint_dir + title
-    if not os.path.exists(checkpoint_dir):
-        os.makedirs(checkpoint_dir)
-    checkpoint_path = os.path.join(checkpoint_dir, f'checkpoint_epoch_{epoch}.pth')
-    torch.save({
-        'epoch': epoch,
-        'model_state_dict': model.state_dict(),
-    }, checkpoint_path)
-    print(f"Checkpoint saved at epoch {epoch}")
-
-
-def eval_auc_precision_recall_curve(y_pred_prob, y_true):
-     """
-     Get Area under curve of precision recal of precision recall curve
-
-     Uasge:
-     Auc of precision recall curve give good indicator of over all model peformance.
-     """
-     precision, recall, _ = precision_recall_curve(y_score=y_pred_prob,y_true=y_true)
-     
-     return float(auc(x=recall, y=precision))
-
-
-def load_checkpoint(model, checkpoint_path):
-    checkpoint = torch.load(checkpoint_path)
-    model.load_state_dict(checkpoint['model_state_dict'])
-    epoch = checkpoint['epoch']
-    print(f"Checkpoint loaded from epoch {epoch}")
-    return epoch
 
 
 

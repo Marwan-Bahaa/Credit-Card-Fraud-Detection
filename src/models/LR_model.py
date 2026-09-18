@@ -92,7 +92,7 @@ if __name__ == '__main__':
     from Enum.PathEnum import PathEnum
     from data.data_helper import load_data
     from Preprocessing.preprocess import Preprocessing
-    from testing.evaluate import plot_pr_and_threshold_curves
+    from evaluate import plot_pr_and_threshold_curves
 
     preprocessor = Preprocessing(target_col='Class', factor=1.5)
         

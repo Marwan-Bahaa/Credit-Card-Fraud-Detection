@@ -10,7 +10,7 @@ if parent_dir not in sys.path:
     sys.path.append(parent_dir) 
 
 from evaluate import cls_report, plot_pr_and_threshold_curves 
-from models.load_pkl import load_model_pkl 
+from helper_functions import load_model
 from Enum.PathEnum import PathEnum
 from data.data_helper import load_data 
 from Preprocessing.preprocess import Preprocessing
@@ -28,10 +28,10 @@ if __name__ == '__main__':
     X_test_scaled, y_test = preprocessing.transform(df_test, clip_bounds, scaler)
     
 
-    lr=load_model_pkl('/home/marwan/Downloads/Machine Learning/Credit-Card-Fraud-Detection/src/models/trained_models/LR')['model'] 
-    rf=load_model_pkl('/home/marwan/Downloads/Machine Learning/Credit-Card-Fraud-Detection/src/models/trained_models/RF')['model'] 
-    nn=load_model_pkl('/home/marwan/Downloads/Machine Learning/Credit-Card-Fraud-Detection/src/models/trained_models/NN')['model'] 
-    vc=load_model_pkl('/home/marwan/Downloads/Machine Learning/Credit-Card-Fraud-Detection/src/models/trained_models/voting_classifier')['model']
+    lr=load_model('/home/marwan/Downloads/Machine Learning/Credit-Card-Fraud-Detection/src/models/trained_models/LR') 
+    rf=load_model('/home/marwan/Downloads/Machine Learning/Credit-Card-Fraud-Detection/src/models/trained_models/RF') 
+    nn=load_model('/home/marwan/Downloads/Machine Learning/Credit-Card-Fraud-Detection/src/models/trained_models/NN') 
+    vc=load_model('/home/marwan/Downloads/Machine Learning/Credit-Card-Fraud-Detection/src/models/trained_models/voting_classifier')
     data_dic = {'train' : [X_train_scaled, y_train], 'eval': [X_eval_scaled, y_eval], 'test': [X_test_scaled, y_test]}
     models = [lr, rf, nn, vc]
 

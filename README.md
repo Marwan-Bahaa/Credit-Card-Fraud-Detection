@@ -12,69 +12,6 @@ Install the required packages
 ```
 pip3 install -r requirements.txt
 ```
-
-#### Repo structure and File descriptions
-
-```shall
-credit Card Fraud Detection/
-├── config/   
-│   ├── config.yml 
-│   └── trainer_config.yml 
-│         
-├── data/
-│   ├── train.csv
-│   ├── val.csv
-│   └── test.csv.zip
-├── models/
-│   ├── 
-│   └── 
-├── runs/
-│   └── ...   
-├── .gitignore
-├── cradit_fraud_utils_helper.py
-├── credit_fraud_train.py
-├── credit_fraud_utils_data.py
-├── credit_fraud_utils_eval.py
-├── eda.ipynb
-├── focal_loss.py
-├── model_evaluation.py
-├── requirements.txt
-└── README.md
-```
-
-- `config/`
-  - `config.yml`: Contains data paths and data preprocessing configuration settings .
-  - `trainer_config.yml`: Contains configuration settings specific to the training process, such as trained models, hyperparameters and evaluation matrix.
-
-- `data/`
-  - `train.csv`: The training dataset.
-  - `val.csv`: The validation dataset.
-  - `test.csv.zip`: The test dataset, compressed in a ZIP file.
-
-- `models/`
-  - Directory for storing trained models, plots and focal-loss checkpoints. 
-
-- `runs/`
-  - Directory for storing logs and results of model runs (tensorboard).
-
-- `.gitignore`: Specifies which files and directories to ignore in the version control system (Git).
-
-- `cradit_fraud_utils_helper.py`: Contains utility functions and helper methods used throughout the project.
-
-- `credit_fraud_train.py`: The main script for training the machine learning models.
-
-- `credit_fraud_utils_data.py`: Contains functions and utilities for data preprocessing and manipulation.
-
-- `credit_fraud_utils_eval.py`: Contains functions and utilities for model evaluation.
-
-- `eda.ipynb`: Jupyter Notebook for Exploratory Data Analysis (EDA) on the training dataset.
-
-- `focal_loss.py`: Implementation of the focal loss function used to handle class imbalance during training.
-
-- `model_evaluation.py`: Script for evaluating the trained models on test data.
-
-- `requirements.txt`: Lists the dependencies and packages required to run the project.
-----
 #### Usage
 
 ```shall

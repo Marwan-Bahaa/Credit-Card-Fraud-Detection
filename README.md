@@ -112,8 +112,8 @@ Focal Loss is a specialized loss function designed to address the class imbalanc
   * High gamma (5~7) gives very noisey loss curve.
 
 ####  Training and the validation curves
-![loss](docs/image.png)
-![AUC-f1-score](docs/image-2.png)
+![loss](docs/i1.png)
+![AUC-f1-score](docs/i2.png)
 
 #### Smote and undersampling technique 
 
